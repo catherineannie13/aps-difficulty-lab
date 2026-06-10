@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tune the Candy — APS Difficulty Lab</title>
+<style>
+  :root{
+    --king-green:#00B66E;
+    --king-green-dark:#009A5C;
+    --king-green-light:#E6F8F0;
+    --ink:#2b2b2b;
+    --muted:#6b7280;
+    --red:#e8453c;
+    --amber:#f5a623;
+    --radius:18px;
+    --shadow:0 8px 24px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 90% 8%, rgba(0,182,110,.10), transparent 40%),
+      radial-gradient(circle at 5% 95%, rgba(245,166,35,.10), transparent 40%),
+      #ffffff;
+    line-height:1.5;
+    padding:24px 16px 64px;
+  }
+  .wrap{max-width:860px;margin:0 auto;}
+  header.hero{text-align:center;margin-bottom:24px;}
+  header.hero .crown{font-size:42px;}
+  h1{
+    color:var(--king-green);
+    font-size:clamp(28px,5vw,44px);
+    margin:6px 0 4px;
+    letter-spacing:-.5px;
+  }
+  .subtitle{color:var(--muted);font-size:18px;margin:0;}
+  .card{
+    background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:24px;margin:18px 0;border:1px solid #f0f0f0;
+  }
+  .step-tag{
+    display:inline-block;background:var(--king-green-light);color:var(--king-green-dark);
+    font-weight:700;font-size:13px;padding:4px 12px;border-radius:999px;
+    text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;
+  }
+  h2{margin:.2em 0 .4em;font-size:24px;}
+  p.lead{color:var(--muted);margin-top:0;}
+
+  /* progress */
+  .levels-nav{display:flex;gap:6px;justify-content:center;margin:8px 0 20px;flex-wrap:wrap;}
+  .levels-nav .pip{
+    flex:1;min-width:42px;text-align:center;padding:8px 4px;border-radius:10px;
+    background:#f4f4f5;color:var(--muted);font-weight:700;font-size:13px;border:2px solid transparent;
+  }
+  .levels-nav .pip.active{background:var(--king-green);color:#fff;}
+  .levels-nav .pip.done{background:var(--king-green-light);color:var(--king-green-dark);border-color:var(--king-green);}
+
+  /* fun rating */
+  .rate-q{font-weight:800;font-size:18px;margin:18px 0 8px;}
+  .rate-row{display:flex;gap:8px;justify-content:center;}
+  .rate-row button{
+    font-size:30px;background:#f4f4f5;border:2px solid transparent;border-radius:14px;
+    width:60px;height:60px;cursor:pointer;transition:transform .08s, background .1s;line-height:1;
+  }
+  .rate-row button:hover{transform:translateY(-3px);}
+  .rate-row button.sel{background:var(--king-green-light);border-color:var(--king-green);transform:translateY(-3px);}
+  .rate-ends{display:flex;justify-content:space-between;max-width:336px;margin:6px auto 16px;color:var(--muted);font-size:13px;font-weight:600;}
+
+  /* game */
+  #gameArea{text-align:center;}
+  .level-title{font-size:20px;font-weight:800;margin-bottom:2px;}
+  .attempts-line{color:var(--muted);font-weight:600;margin-bottom:18px;}
+  .bar{
+    position:relative;height:54px;border-radius:14px;margin:24px auto;max-width:680px;
+    background:linear-gradient(90deg,#f6dede,#fdeecf,#dff5e8,#fdeecf,#f6dede);
+    overflow:hidden;border:2px solid #eee;
+  }
+  .zone{
+    position:absolute;top:0;bottom:0;background:rgba(0,182,110,.30);
+    border-left:3px dashed var(--king-green-dark);border-right:3px dashed var(--king-green-dark);
+  }
+  .marker{
+    position:absolute;top:-4px;width:8px;height:62px;background:var(--ink);border-radius:4px;
+    box-shadow:0 0 0 2px #fff;
+  }
+  .zone-label{position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+    font-size:12px;font-weight:700;color:var(--king-green-dark);white-space:nowrap;}
+  .btn{
+    font-family:inherit;font-weight:800;font-size:18px;cursor:pointer;border:none;
+    border-radius:14px;padding:16px 40px;color:#fff;background:var(--king-green);
+    box-shadow:0 6px 0 var(--king-green-dark);transition:transform .05s, box-shadow .05s;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--king-green-dark);}
+  .btn.secondary{background:#fff;color:var(--king-green-dark);border:2px solid var(--king-green);box-shadow:none;}
+  .btn.ghost{background:#fff;color:var(--muted);border:2px solid #e0e0e0;box-shadow:none;font-size:14px;padding:10px 22px;margin-top:14px;}
+  .btn.ghost:hover{border-color:var(--red);color:var(--red);}
+  .btn:disabled{background:#cfcfcf;box-shadow:0 6px 0 #b5b5b5;cursor:not-allowed;}
+  .hint{color:var(--muted);font-size:14px;margin-top:14px;}
+  .feedback{height:28px;font-weight:800;font-size:18px;margin:10px 0;}
+  .feedback.hit{color:var(--king-green);}
+  .feedback.miss{color:var(--red);}
+  .tally{display:flex;gap:24px;justify-content:center;margin:14px 0;font-weight:700;}
+  .tally .num{font-size:30px;display:block;color:var(--king-green-dark);}
+
+  /* results table */
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th,td{padding:12px 10px;text-align:center;border-bottom:1px solid #eee;font-size:16px;}
+  th{background:var(--king-green);color:#fff;font-size:14px;text-transform:uppercase;letter-spacing:.4px;}
+  th:first-child{border-radius:10px 0 0 0;} th:last-child{border-radius:0 10px 0 0;}
+  td.level{font-weight:800;text-align:left;}
+  input.aps-in{
+    width:90px;font-family:inherit;font-size:18px;font-weight:700;text-align:center;
+    padding:8px;border:2px solid #ddd;border-radius:10px;
+  }
+  input.aps-in:focus{outline:none;border-color:var(--king-green);}
+  input.aps-in.good{border-color:var(--king-green);background:var(--king-green-light);}
+  input.aps-in.bad{border-color:var(--red);background:#fdecec;}
+  .formula{
+    text-align:center;font-size:20px;background:var(--king-green-light);
+    color:var(--king-green-dark);font-weight:800;padding:14px;border-radius:12px;margin:0 0 18px;
+  }
+
+  /* chart */
+  .chart{display:flex;align-items:flex-end;gap:20px;height:240px;padding:12px 8px 0;
+    border-bottom:3px solid #ddd;margin:18px 0 4px;}
+  .chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .chart .col .barfill{
+    width:70%;border-radius:10px 10px 0 0;background:var(--king-green);
+    transition:height .6s cubic-bezier(.2,.8,.2,1);position:relative;
+  }
+  .chart .col .val{position:absolute;top:-24px;left:0;right:0;text-align:center;font-weight:800;}
+  .chart .col .lab{margin-top:8px;font-weight:700;color:var(--muted);}
+  .zoneband{font-size:13px;color:var(--muted);text-align:center;margin-top:10px;}
+
+  .funzone-box{
+    display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+    background:var(--king-green-light);border-radius:14px;padding:16px;font-weight:700;color:var(--king-green-dark);
+  }
+  .discuss li{margin-bottom:10px;}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:13px;}
+  .pill.easy{background:#dff5e8;color:var(--king-green-dark);}
+  .pill.fun{background:#fff3d6;color:#b07a00;}
+  .pill.hard{background:#fde0de;color:var(--red);}
+  .hidden{display:none;}
+  footer{text-align:center;color:#aaa;font-size:13px;margin-top:30px;}
+  .facilitator{background:#fafafa;border:1px dashed #ccc;}
+  details summary{cursor:pointer;font-weight:700;color:var(--king-green-dark);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crown">🍬👑</div>
+    <h1>Tune the Candy</h1>
+    <p class="subtitle">An APS difficulty lab — how do King designers know if a level is <em>too hard</em>?</p>
+  </header>
+
+  <!-- INTRO -->
+  <div class="card" id="introCard">
+    <span class="step-tag">The mission</span>
+    <h2>What makes a level fun for <em>you</em>? 🎮</h2>
+    <p class="lead">Designers measure how hard a level is with <strong>APS — Attempts Per Success</strong>. Higher APS = harder level.</p>
+    <div class="formula">APS&nbsp;=&nbsp;Attempts&nbsp;÷&nbsp;Successes</div>
+    <p class="lead">But how hard is <em>too</em> hard, and how easy is <em>boring</em>? There's no universal answer — it's personal.
+      So you'll figure out <strong>your own</strong>:</p>
+    <ul class="lead">
+      <li>Play <strong>10 levels</strong> (each gets harder). Collect <strong>3 🍭 candies</strong> to clear a level.</li>
+      <li>After each one, rate <strong>how much fun it was</strong> ⭐.</li>
+      <li>Work out the <strong>APS</strong> of every level yourself.</li>
+      <li>Then discover <strong>your personal "fun zone"</strong> — the APS range of the levels you enjoyed most.</li>
+    </ul>
+    <div style="text-align:center;">
+      <button class="btn" onclick="startGame()">Start playing →</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="card hidden" id="gameCard">
+    <span class="step-tag">Play</span>
+    <div class="levels-nav" id="levelsNav"></div>
+
+    <div id="gameArea">
+      <div class="level-title" id="levelTitle"></div>
+      <div class="attempts-line" id="attemptsLine"></div>
+
+      <div class="bar" id="bar">
+        <div class="zone" id="zone"><span class="zone-label">land here 🍭</span></div>
+        <div class="marker" id="marker"></div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="tally">
+        <div>Candies 🍭<span class="num" id="tSuccess">0 / 3</span></div>
+        <div>Attempts<span class="num" id="tAttempts">0</span></div>
+      </div>
+
+      <button class="btn" id="stopBtn" onclick="stopMarker()">STOP</button>
+      <div><button class="btn ghost" id="giveUpBtn" onclick="giveUp()">🏳️ Give up on this level</button></div>
+
+      <div id="ratingBlock" class="hidden">
+        <p class="rate-q">How much fun was that level?</p>
+        <div class="rate-row" id="rateRow">
+          <button data-v="1" title="Not fun">😴</button>
+          <button data-v="2" title="Meh">😐</button>
+          <button data-v="3" title="OK">🙂</button>
+          <button data-v="4" title="Fun">😀</button>
+          <button data-v="5" title="Loved it">🤩</button>
+        </div>
+        <div class="rate-ends"><span>Not fun (1)</span><span>Loved it! (5)</span></div>
+        <button class="btn hidden" id="nextBtn" onclick="nextLevel()">Next level →</button>
+      </div>
+
+      <p class="hint">Tip: press <strong>SPACE</strong> or tap STOP. Keep going until you've collected 3 candies — take turns as a team!</p>
+    </div>
+  </div>
+
+  <!-- RESULTS / CALCULATE -->
+  <div class="card hidden" id="resultsCard">
+    <span class="step-tag">Now you calculate</span>
+    <h2>Work out the APS for each level ✏️</h2>
+    <p class="lead">Here's the data the game recorded, plus the fun rating <em>you</em> gave each level. Every level needed
+      <strong>3 successes</strong> — so divide each level's attempts by 3. Fill in the APS column yourselves, rounded to 1 decimal place.</p>
+    <div class="formula">APS&nbsp;=&nbsp;Attempts&nbsp;÷&nbsp;Successes</div>
+    <table>
+      <thead>
+        <tr><th>Level</th><th>Successes</th><th>Attempts</th><th>Your fun ⭐</th><th>Your APS</th></tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <p class="hint" id="apsHint" style="text-align:center;"></p>
+    <p class="lead" style="text-align:center;margin-top:18px;"><strong>What next?</strong> A single APS means little on its own. The interesting bit is
+      pairing each level's APS with <em>how much fun you found it</em> — that reveals the difficulty <strong>you</strong> enjoy most.</p>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn" onclick="revealCurve()">Find my fun zone →</button>
+    </div>
+  </div>
+
+  <!-- CURVE + DISCUSSION -->
+  <div class="card hidden" id="curveCard">
+    <span class="step-tag">Find your fun zone</span>
+    <h2>Fun vs. difficulty 📈</h2>
+    <p class="lead">Each bar is a level — its <strong>height is the APS</strong> you calculated (taller = harder), and its
+      <strong>colour is how fun you rated it</strong> (greener = more fun). The ⭐ above shows your rating.</p>
+    <div class="chart" id="chart"></div>
+    <p class="zoneband" id="legend"></p>
+
+    <h2 style="margin-top:24px;">So… what's <em>your</em> fun zone? 🎯</h2>
+    <p class="lead">Find the levels you rated <strong>most fun</strong> on the chart, and read off their <strong>APS values</strong>
+      (the number on top of each bar). The range those APS values cover is <strong>your personal fun zone</strong>:</p>
+    <div class="funzone-box">
+      <span>My fun zone is from APS</span>
+      <input class="aps-in" id="fzLow" inputmode="decimal" placeholder="?">
+      <span>to APS</span>
+      <input class="aps-in" id="fzHigh" inputmode="decimal" placeholder="?">
+      <button class="btn secondary" style="padding:10px 20px;font-size:15px;" onclick="markFunZone()">Show on chart</button>
+    </div>
+    <p class="hint" id="fzHint" style="text-align:center;"></p>
+
+    <h2 style="margin-top:24px;">Talk it through 💬</h2>
+    <ol class="discuss">
+      <li><strong>Compare with your team:</strong> did everyone land on the same fun zone? Whose was hardest / easiest?</li>
+      <li>If your teammates disagree, who is the game "right" for? How could a designer keep <strong>everyone</strong> happy at once?</li>
+      <li>You played ~30 attempts. King uses data from <strong>millions</strong> of players. Why does that make their fun zone more trustworthy than yours?</li>
+      <li>APS only measures <em>how hard</em> a level is. What else would you measure to know if it's actually fun? (time per level, do players quit, do they come back…)</li>
+    </ol>
+    <div style="text-align:center;">
+      <button class="btn secondary" onclick="location.reload()">↺ Play again</button>
+    </div>
+  </div>
+
+  <footer>Made for the King × Ada Industry Project 2026 🧡 · Making the World Playful</footer>
+</div>
+
+<script>
+/* ---------- 10 levels: smooth ramp, harder = smaller zone + faster marker ---------- */
+const N_LEVELS = 10;
+const LEVELS = Array.from({length:N_LEVELS}, (_,i)=>{
+  const t = i/(N_LEVELS-1);                 // 0 → 1 across the levels
+  return {
+    name: "Level " + (i+1),
+    zone: +(17 - t*14).toFixed(1),          // 17%  →  3%   (target shrinks)
+    speed:+(1.3 + t*2.3).toFixed(2),        // 1.3  →  3.6  (marker speeds up)
+  };
+});
+const SUCCESS_TARGET = 3;       // collect this many candies to clear a level
+const SAFETY_CAP = 30;          // stop a level after this many attempts (avoids endless hard levels)
+
+let levelIdx = 0;
+let attempts = 0, successes = 0;
+let results = [];  // {attempts, successes}
+let ratings = [];  // fun rating 1-5 per level
+let pos = 0, dir = 1, anim = null, running = false;
+let zoneStart = 0, zoneEnd = 0;
+
+const $ = id => document.getElementById(id);
+
+function startGame(){
+  $("introCard").classList.add("hidden");
+  $("gameCard").classList.remove("hidden");
+  buildNav();
+  loadLevel();
+  $("gameCard").scrollIntoView({behavior:"smooth"});
+}
+
+function buildNav(){
+  const nav = $("levelsNav");
+  nav.innerHTML = "";
+  LEVELS.forEach((l,i)=>{
+    const d = document.createElement("div");
+    d.className = "pip" + (i===levelIdx?" active":"") + (i<levelIdx?" done":"");
+    d.textContent = "L"+(i+1);
+    d.id = "pip"+i;
+    nav.appendChild(d);
+  });
+}
+
+function loadLevel(){
+  const L = LEVELS[levelIdx];
+  attempts = 0; successes = 0;
+  $("levelTitle").textContent = L.name;
+  $("attemptsLine").textContent = `Collect ${SUCCESS_TARGET} 🍭 to clear the level`;
+  $("tAttempts").textContent = "0";
+  $("tSuccess").textContent = "0 / " + SUCCESS_TARGET;
+  $("feedback").textContent = "";
+  $("feedback").className = "feedback";
+  $("stopBtn").classList.remove("hidden");
+  $("stopBtn").disabled = false;
+  $("giveUpBtn").classList.remove("hidden");
+  $("ratingBlock").classList.add("hidden");
+  $("nextBtn").classList.add("hidden");
+  [...$("rateRow").children].forEach(b=>b.classList.remove("sel"));
+
+  buildNav();
+  startMarker();
+}
+
+// put the green zone in a RANDOM spot each attempt, so players must react (not pre-aim)
+function placeZone(){
+  const w = LEVELS[levelIdx].zone;
+  zoneStart = 3 + Math.random() * (94 - w);
+  zoneEnd = zoneStart + w;
+  const zoneEl = $("zone");
+  zoneEl.style.left = zoneStart + "%";
+  zoneEl.style.width = w + "%";
+}
+
+function startMarker(){
+  cancelAnimationFrame(anim);
+  placeZone();
+  pos = Math.random() * 100;            // random start so timing differs each go
+  dir = Math.random() < 0.5 ? 1 : -1;
+  running = true;
+  const L = LEVELS[levelIdx];
+  function frame(){
+    if(!running) return;
+    pos += dir * L.speed;
+    if(pos >= 100){ pos = 100; dir = -1; }
+    if(pos <= 0){ pos = 0; dir = 1; }
+    $("marker").style.left = pos + "%";
+    anim = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function stopMarker(){
+  if(!running || successes >= SUCCESS_TARGET) return;
+  running = false;
+  cancelAnimationFrame(anim);
+  attempts++;
+  // marker centre roughly at pos; zone is in % across bar
+  const hit = pos >= zoneStart && pos <= zoneEnd;
+  if(hit){
+    successes++;
+    $("feedback").textContent = "🍭 Candy collected!";
+    $("feedback").className = "feedback hit";
+  } else {
+    $("feedback").textContent = "✗ Missed!";
+    $("feedback").className = "feedback miss";
+  }
+  $("tAttempts").textContent = attempts;
+  $("tSuccess").textContent = successes + " / " + SUCCESS_TARGET;
+
+  if(successes >= SUCCESS_TARGET){
+    endLevel("cleared");
+  } else if(attempts >= SAFETY_CAP){
+    endLevel("cap");
+  } else {
+    setTimeout(()=>{ if(!running){ $("feedback").textContent=""; $("feedback").className="feedback"; startMarker(); } }, 650);
+  }
+}
+
+function giveUp(){
+  if(successes >= SUCCESS_TARGET) return;   // already cleared
+  running = false; cancelAnimationFrame(anim);
+  endLevel("gaveup");
+}
+
+function endLevel(outcome){   // "cleared" | "cap" | "gaveup"
+  running = false; cancelAnimationFrame(anim);
+  $("stopBtn").classList.add("hidden");
+  $("giveUpBtn").classList.add("hidden");
+  const msg = outcome==="cleared" ? "✅ Level cleared!"
+            : outcome==="gaveup"  ? "🏳️ You gave up — too hard to be worth it?"
+            : "⏱ Ran out of patience — that one was brutal!";
+  $("feedback").textContent = msg;
+  $("feedback").className = "feedback " + (outcome==="cleared" ? "hit" : "miss");
+  results[levelIdx] = { attempts:attempts, successes:successes, outcome:outcome };
+  $("nextBtn").textContent = (levelIdx < LEVELS.length - 1) ? "Next level →" : "See your results →";
+  $("ratingBlock").classList.remove("hidden");   // ask for fun rating; Next appears once rated
+}
+
+function rateLevel(v){
+  ratings[levelIdx] = v;
+  [...$("rateRow").children].forEach(b=>b.classList.toggle("sel", +b.dataset.v === v));
+  $("nextBtn").classList.remove("hidden");
+}
+$("rateRow").addEventListener("click", e=>{
+  const b = e.target.closest("button");
+  if(b) rateLevel(+b.dataset.v);
+});
+
+function nextLevel(){
+  if(ratings[levelIdx] == null) return;          // must rate before moving on
+  if(levelIdx < LEVELS.length - 1){
+    levelIdx++;
+    loadLevel();
+  } else {
+    showResults();
+  }
+}
+
+/* ---------- Results: students compute APS ---------- */
+function showResults(){
+  running = false; cancelAnimationFrame(anim);
+  $("gameCard").classList.add("hidden");
+  const body = $("resultsBody");
+  body.innerHTML = "";
+  results.forEach((r,i)=>{
+    const tr = document.createElement("tr");
+    const stars = "⭐".repeat(ratings[i] || 0) || "–";
+    const apsCell = r.successes > 0
+      ? `<input class="aps-in" id="aps${i}" inputmode="decimal" placeholder="?" autocomplete="off">`
+      : `<span title="You can't divide by zero! No successes = an impossible level." style="font-weight:800;color:var(--red);font-size:20px;">∞</span>`;
+    tr.innerHTML = `
+      <td class="level">Level ${i+1}</td>
+      <td>${r.successes}</td>
+      <td>${r.attempts}</td>
+      <td title="you rated ${ratings[i]}/5">${stars}</td>
+      <td>${apsCell}</td>`;
+    body.appendChild(tr);
+  });
+  $("resultsCard").classList.remove("hidden");
+  $("resultsCard").scrollIntoView({behavior:"smooth"});
+}
+
+let studentAps = [];  // the APS values the students typed (used by the fun-zone marker)
+
+// colour a bar by how fun the player rated that level: red(1) → amber(3) → green(5)
+function funColor(rating){
+  const map = {1:"#e8453c", 2:"#f5853c", 3:"#f5c842", 4:"#7dd3a8", 5:"#00B66E"};
+  return map[rating] || "#cfcfcf";
+}
+
+function revealCurve(){
+  // gather student APS values, gentle-check against truth
+  let apsVals = [], allFilled = true, anyWrong = false;
+  results.forEach((r,i)=>{
+    if(r.successes === 0){ apsVals.push(Infinity); return; }   // ∞ row, no input to check
+    const el = $("aps"+i);
+    const v = parseFloat(el.value);
+    const truth = r.attempts / r.successes;
+    if(isNaN(v)){ allFilled = false; el.classList.add("bad"); apsVals.push(truth); return; }
+    const ok = Math.abs(v - truth) <= 0.17;
+    el.classList.toggle("good", ok);
+    el.classList.toggle("bad", !ok);
+    if(!ok) anyWrong = true;
+    apsVals.push(v);
+  });
+
+  if(!allFilled){
+    $("apsHint").textContent = "Fill in every APS box first — Attempts ÷ Successes.";
+    return;
+  }
+  $("apsHint").textContent = anyWrong
+    ? "Some look a little off — double-check Attempts ÷ Successes. (Green = matches the data.) Chart uses your numbers anyway 👇"
+    : "Spot on! 🎉 Every APS matches the data.";
+
+  studentAps = apsVals;
+  drawChart(apsVals);
+  $("legend").innerHTML = "Bar colour = your fun rating: " +
+    [1,2,3,4,5].map(r=>`<span class="pill" style="background:${funColor(r)};color:#fff;">${"⭐".repeat(r)}</span>`).join(" ");
+
+  // guide the fun-zone inputs with the actual APS range the student produced
+  const finite = apsVals.filter(isFinite);
+  const lo = +Math.min(...finite).toFixed(1), hi = +Math.max(...finite).toFixed(1);
+  $("fzLow").placeholder = lo; $("fzHigh").placeholder = hi;
+  $("fzHint").textContent = `Tip: type APS values (not level numbers!). Your APS ran from about ${lo} to ${hi}.`;
+
+  $("curveCard").classList.remove("hidden");
+  $("curveCard").scrollIntoView({behavior:"smooth"});
+}
+
+function drawChart(apsVals){
+  const chart = $("chart");
+  chart.innerHTML = "";
+  const finite = apsVals.filter(isFinite);
+  const maxV = Math.max(...finite, 1);
+  apsVals.forEach((v,i)=>{
+    const inf = !isFinite(v);
+    const h = inf ? 100 : Math.max(5, (v / maxV) * 92);
+    const label = inf ? "∞" : (+v.toFixed(1));
+    const col = document.createElement("div");
+    col.className = "col";
+    col.dataset.i = i;
+    col.innerHTML = `<div class="barfill" style="height:0%;background:${funColor(ratings[i])}">
+        <span class="val">${label}</span></div>
+      <div class="lab">L${i+1}<br><small>${"⭐".repeat(ratings[i]||0)}</small></div>`;
+    chart.appendChild(col);
+    requestAnimationFrame(()=>{ setTimeout(()=>{ col.querySelector(".barfill").style.height = h + "%"; }, 45*i); });
+  });
+}
+
+// highlight the levels whose APS falls in the player's chosen fun-zone range
+function markFunZone(){
+  const lo = parseFloat($("fzLow").value), hi = parseFloat($("fzHigh").value);
+  if(isNaN(lo) || isNaN(hi)){ $("fzHint").textContent = "Type a low and a high APS value first."; return; }
+  const a = Math.min(lo,hi), b = Math.max(lo,hi);
+  let inZone = [];
+  [...$("chart").children].forEach(col=>{
+    const i = +col.dataset.i, v = studentAps[i];
+    const inside = v >= a && v <= b;
+    col.style.opacity = inside ? "1" : "0.32";
+    col.querySelector(".barfill").style.outline = inside ? "3px solid var(--ink)" : "none";
+    if(inside) inZone.push("L"+(i+1));
+  });
+  $("fzHint").textContent = inZone.length
+    ? `Your fun zone (APS ${a}–${b}) covers ${inZone.join(", ")}. Do those match the levels you rated highest? 🎯`
+    : `No levels fall in APS ${a}–${b}. Check your range against the bars.`;
+}
+
+/* keyboard */
+document.addEventListener("keydown", e=>{
+  if($("gameCard").classList.contains("hidden")) return;
+  const rating = !$("ratingBlock").classList.contains("hidden");
+  if(rating && e.key >= "1" && e.key <= "5"){
+    e.preventDefault(); rateLevel(+e.key); return;
+  }
+  if(e.code === "Space"){
+    e.preventDefault();
+    if(!$("nextBtn").classList.contains("hidden")) nextLevel();
+    else if(!rating) stopMarker();
+  }
+});
+</script>
+</body>
+</html>
