@@ -119,6 +119,20 @@
   input.aps-in:focus{outline:none;border-color:var(--king-green);}
   input.aps-in.good{border-color:var(--king-green);background:var(--king-green-light);}
   input.aps-in.bad{border-color:var(--red);background:#fdecec;}
+  @media (max-width:520px){
+    body{padding:16px 8px 48px;}
+    .card{padding:16px 12px;}
+    table{table-layout:fixed;width:100%;}
+    th,td{padding:8px 2px;font-size:12px;word-break:break-word;}
+    th{font-size:10px;letter-spacing:0;}
+    td.level{font-size:12px;}
+    th:nth-child(1),td:nth-child(1){width:23%;}   /* Level */
+    th:nth-child(2),td:nth-child(2){width:15%;}   /* Successes */
+    th:nth-child(3),td:nth-child(3){width:15%;}   /* Attempts */
+    th:nth-child(4),td:nth-child(4){width:25%;}   /* Your fun */
+    th:nth-child(5),td:nth-child(5){width:22%;}   /* Your APS */
+    input.aps-in{width:100%;max-width:56px;font-size:15px;padding:7px 2px;}
+  }
   .formula{
     text-align:center;font-size:20px;background:var(--king-green-light);
     color:var(--king-green-dark);font-weight:800;padding:14px;border-radius:12px;margin:0 0 18px;
